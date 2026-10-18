@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "plant-robotics-lab"
+version = "0.1.0"
+description = "Research and engineering foundations for strawberry plant robotics"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.9", "pyyaml>=6"]
+
+[project.scripts]
+prl = "plant_robotics.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/plant_robotics"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

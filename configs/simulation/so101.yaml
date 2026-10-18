@@ -1,0 +1,9 @@
+schema_version: 1
+status: proposed
+backend: mujoco
+robot_model: null  # supply verified SO-101 URDF or MJCF path
+fixed_base: true
+physics_timestep_seconds: 0.002
+control_frequency_hz: 50
+allow_hardware_commands: false
+# Planning specification; not executable simulator configuration.

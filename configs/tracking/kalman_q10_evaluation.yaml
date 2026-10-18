@@ -1,0 +1,17 @@
+schema_version: 1
+experiment_id: q10_independent_evaluation
+status: planned
+reference_tuning_sequence:
+  episode: episode_00000
+  camera: left_arm
+holdout_views: [middle, right_arm]
+process_noise_candidates: [1.0, 10.0]
+success_threshold_px: 20
+report_metrics:
+  - mean_position_error_px
+  - p95_position_error_px
+  - success_rate_at_20px
+  - false_valid_rate
+  - identity_switches
+  - occlusion_recovery_rate
+# Experimental plan only. No evaluation runner is included.
