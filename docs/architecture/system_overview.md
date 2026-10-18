@@ -2,7 +2,8 @@
 
 ```mermaid
 flowchart TD
-  S[Cameras and robot state] --> P[Plant organ perception]
+  S[Cameras and robot state] --> I[Deterministic media ingestion]
+  I --> P[Plant organ perception]
   P --> T[Persistent physical target tracker]
   T --> G[Geometry and 3D uncertainty]
   G --> D[Task and grasp planning]
@@ -16,6 +17,9 @@ flowchart TD
 ## Interfaces
 
 Keep domain records independent of ROS 2, LeRobot, camera SDKs, PyTorch, and simulator libraries. Use adapters at system boundaries.
+
+Video ingestion is an adapter boundary: it reports decoded pixels and nominal
+frame-index timing, while tracking and rendering remain separate layers.
 
 ## Non-negotiable safety invariant
 

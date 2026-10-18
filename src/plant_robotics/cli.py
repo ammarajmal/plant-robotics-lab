@@ -8,7 +8,7 @@ def main() -> None:
     parser.add_argument("command", choices=["status"])
     args = parser.parse_args()
     if args.command == "status":
-        print("PRL foundation installed; robotics modules are not yet implemented")
+        print("PRL foundation and deterministic video ingestion are installed")
 
 
 if __name__ == "__main__":

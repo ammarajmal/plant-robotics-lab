@@ -1,8 +1,30 @@
+.venv/
 __pycache__/
 *.py[cod]
-.venv/
 .pytest_cache/
 .ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Local editor state and generated language-server databases.
+.vscode/*.db
+.vscode/*.db-*
+.vscode/*.vc.db
+.vscode/*.vc.db-*
+.vscode/*.lock
+.vscode/c_cpp_properties.json
+.idea/
+
+# Generated media, reports, and local experiment outputs.
+*.mp4
+*.avi
+*.mov
+outputs/
+artifacts/
+reports/generated/
+
+# Local data and model artifacts.
 *.egg-info/
 build/
 dist/
@@ -13,9 +35,7 @@ dist/
 data/raw/
 data/interim/
 data/processed/
-artifacts/
 *.pt
 *.pth
 *.ckpt
 *.onnx
-*.mp4

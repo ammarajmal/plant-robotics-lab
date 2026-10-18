@@ -7,7 +7,10 @@ name = "plant-robotics-lab"
 version = "0.1.0"
 description = "Research and engineering foundations for strawberry plant robotics"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.0",
+    "opencv-python-headless>=4.10",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.9", "pyyaml>=6"]
