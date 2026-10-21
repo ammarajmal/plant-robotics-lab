@@ -49,3 +49,21 @@ Equal FPS, dimensions, and frame counts show structural compatibility for a
 nominal playback iterator. They do not show shared camera clocks, exposure
 times, dropped-frame absence, cross-view target identity, calibration, or valid
 3D correspondence. Those require separate evidence and contracts.
+
+## PRL-003 playback
+
+`plant_robotics.playback.config` validates YAML before opening inputs.
+`playback.render` consumes `iter_three_view()` sequentially, preserves
+`left_arm`, `middle`, `right_arm` order, annotates each view, and writes a
+headless MP4 plus contact sheet. `playback.provenance` records observed
+decoder/runtime/configuration/output values. A source beneath the configuration
+directory is written as `config-relative:<path>`; sources elsewhere use an
+explicit `absolute:<path>` reference. Missing provenance remains `null` or
+`unknown`. Every manifest says `exposure_synchronization: unverified`.
+
+Run it with:
+
+```text
+prl playback three-view --config configs/playback/three_view.yaml \
+  --output-dir artifacts/playback/prl003_episode00000
+```

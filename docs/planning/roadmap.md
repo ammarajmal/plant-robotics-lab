@@ -7,10 +7,10 @@
 - [ ] Establish data and model asset manifest
 
 ## M1 — Multi-camera input
-- [ ] Audit existing deterministic decoder
-- [ ] Compose reproducible three-view playback
-- [ ] Emit timestamp provenance and frame manifest
-- [ ] Create failure and mismatch tests
+- [x] Audit existing deterministic decoder
+- [x] Compose reproducible three-view playback (PRL-003)
+- [x] Emit timestamp provenance and frame manifest (PRL-003)
+- [x] Create failure and mismatch tests (PRL-003)
 
 ## M2 — Persistent 2D tracking
 - [ ] Reproduce B0/B1/B2 reference results

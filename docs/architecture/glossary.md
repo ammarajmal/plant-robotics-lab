@@ -11,3 +11,9 @@
 - **LOST:** Physical identity or target location insufficiently trustworthy.
 - **False valid:** Tracker presents an incorrect prediction as a valid target.
 - **Experiment run:** Frozen code, config, dataset, evaluation and environment provenance.
+- **Nominal frame index:** Deterministic playback position derived from decoder
+  frame index and reported FPS.
+- **Exposure synchronization:** Physical agreement of camera exposure times;
+  PRL-003 records this as `unverified`.
+- **Playback provenance:** Grounded source, decoder, runtime, configuration,
+  output, and execution metadata. Missing values remain `null` or `unknown`.

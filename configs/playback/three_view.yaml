@@ -1,18 +1,19 @@
 schema_version: 1
-experiment_id: episode_00000_three_view
-source_repository: norman
-source_episode: episode_00000
+dataset_id: norman
+episode_id: episode_00000
+run_id: prl003_episode00000
+output_dir: artifacts/playback/prl003_episode00000
 views:
   - camera_id: left_arm
-    source: null
+    source: ../data/left_arm.mp4
   - camera_id: middle
-    source: null
+    source: ../data/middle.mp4
   - camera_id: right_arm
-    source: null
+    source: ../data/right_arm.mp4
 alignment:
   strategy: frame_index_visualization_only
   hardware_synchronization_verified: false
   timestamp_provenance: unknown
-on_missing_or_corrupt_stream: fail
-tracking_enabled: false
-# Specification only: reader and parser not yet implemented.
+output:
+  codec: mp4v
+  # fps defaults to the decoder-reported stream FPS.

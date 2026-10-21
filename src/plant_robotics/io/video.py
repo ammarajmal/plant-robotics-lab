@@ -76,6 +76,11 @@ def inspect_video(path: Path, camera_id: str) -> VideoStreamInfo:
                 raise VideoIngestionError(f"{name} must be a positive integer, got {value!r}")
         if not math.isfinite(fps) or fps <= 0:
             raise VideoIngestionError(f"fps must be positive and finite, got {fps!r}")
+        fourcc = int(capture.get(cv2.CAP_PROP_FOURCC))
+        codec = (
+            "".join(chr((fourcc >> (8 * offset)) & 0xFF) for offset in range(4)).strip()
+            or "unknown"
+        )
         return VideoStreamInfo(
             source_path=path,
             camera_id=valid_camera,
@@ -83,6 +88,8 @@ def inspect_video(path: Path, camera_id: str) -> VideoStreamInfo:
             height=int(height),
             fps=float(fps),
             frame_count=int(frame_count),
+            backend=capture.getBackendName() or "unknown",
+            codec=codec,
         )
     finally:
         capture.release()

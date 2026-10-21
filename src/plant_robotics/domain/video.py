@@ -52,6 +52,8 @@ class VideoStreamInfo:
     height: int
     fps: float
     frame_count: int
+    backend: str = "unknown"
+    codec: str = "unknown"
 
     @property
     def nominal_duration_s(self) -> float:
