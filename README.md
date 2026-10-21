@@ -7,15 +7,18 @@ A research-grade engineering platform for autonomous strawberry plant care and h
 ## Quick start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
-    pytest -q
-    ruff check .
-    ruff format --check .
-    python -m compileall -q src tests
-    prl status
+uv sync --dev
+uv run pytest -q
+uv run ruff check .
+uv run ruff format --check .
+uv run python -m compileall -q src tests
+uv run prl status
 ```
+
+Headless nominal three-view evidence can be generated with
+`prl playback three-view --config configs/playback/three_view.yaml`. The
+configuration must name all three source files; playback fails on missing,
+corrupt, or structurally incompatible streams and writes a provenance manifest.
 
 Read [docs/index.md](docs/index.md) and [docs/planning/roadmap.md](docs/planning/roadmap.md).
 
