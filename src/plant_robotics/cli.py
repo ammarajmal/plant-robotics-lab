@@ -4,12 +4,15 @@ import argparse
 from dataclasses import replace
 from pathlib import Path
 
-from plant_robotics.domain.datasets import ManifestError
+from plant_robotics.domain.datasets import ManifestError, SourceManifest
+from plant_robotics.io.decode_audit import SourceDriftError, audit_episode
+from plant_robotics.io.hashing import sha256_file
 from plant_robotics.io.resolver import (
     SourceResolutionError,
     check_destination,
     load_catalog,
     load_manifest,
+    publish_json,
     resolve_data_root,
     resolve_episode,
     verify_episode,
@@ -47,6 +50,13 @@ def _build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--data-root", type=Path, help="defaults to the manifest's env variable")
     verify.add_argument("--catalog", type=Path, help="also bind the manifest to its catalog")
     verify.add_argument("--no-hash", action="store_true", help="skip SHA-256 comparison")
+
+    audit = data_commands.add_parser("audit", help="decode every frame and write an audit JSON")
+    audit.add_argument("--manifest", type=Path, required=True)
+    audit.add_argument("--catalog", type=Path, required=True)
+    audit.add_argument("--output", type=Path, required=True)
+    audit.add_argument("--data-root", type=Path, help="defaults to the manifest's env variable")
+    audit.add_argument("--force", action="store_true", help="replace an existing output file")
     return parser
 
 
@@ -61,6 +71,29 @@ def _playback(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None
     except (ConfigError, FileNotFoundError, PlaybackError) as exc:
         parser.exit(2, f"prl: error: {exc}\n")
     print(f"playback complete: {config.resolved_output_dir / 'manifest.json'}")
+
+
+def _audit(args: argparse.Namespace, manifest: SourceManifest, root: Path) -> None:
+    catalog = load_catalog(args.catalog)
+    check_destination(args.output, root, force=args.force)
+    try:
+        audit = audit_episode(manifest, root, catalog, manifest_sha256=sha256_file(args.manifest))
+    except SourceDriftError as exc:
+        print("sources differ from the manifest; nothing decoded:")
+        for difference in exc.differences:
+            print(f"  {difference}")
+        raise SystemExit(1) from exc
+    publish_json(audit, args.output, data_root=root, force=args.force)
+    summary = audit["summary"]
+    print(f"audit written: {args.output} [episode digest {summary['episode_digest'][:16]}]")
+    for stream in audit["streams"]:
+        print(
+            f"  {stream['camera_id']}: {stream['status']}, decoded "
+            f"{stream.get('decoded_frame_count')} frames"
+        )
+    if not summary["all_streams_complete"]:
+        print("INTEGRITY FINDING: at least one stream did not decode completely")
+        raise SystemExit(1)
 
 
 def _data(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
@@ -78,6 +111,9 @@ def _data(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             return
         manifest = load_manifest(args.manifest)
         root = resolve_data_root(args.data_root, manifest.root_variable)
+        if args.data_command == "audit":
+            _audit(args, manifest, root)
+            return
         catalog = load_catalog(args.catalog) if args.catalog else None
         result = verify_episode(manifest, root, compute_hash=not args.no_hash, catalog=catalog)
     except (ManifestError, SourceResolutionError, VideoIngestionError, OSError) as exc:

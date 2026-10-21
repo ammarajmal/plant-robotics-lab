@@ -119,7 +119,7 @@ def resolve_data_root(
     return Path(value)
 
 
-def _open_root(data_root: Path) -> Path:
+def open_root(data_root: Path) -> Path:
     root = Path(data_root).resolve()
     if not root.is_dir():
         raise SourceResolutionError(f"data root is not a directory: {root}")
@@ -182,7 +182,7 @@ def resolve_episode(
 
     validate_identifier(task_id, "task_id")
     validate_identifier(episode_id, "episode_id")
-    root = _open_root(data_root)
+    root = open_root(data_root)
     streams = tuple(
         _observe(
             root,
@@ -252,7 +252,7 @@ def verify_episode(
 
     if catalog is not None:
         check_identity(manifest, catalog)
-    root = _open_root(data_root)
+    root = open_root(data_root)
     differences: list[str] = []
 
     def compare(camera: str, name: str, recorded: object, observed: object) -> None:
@@ -312,6 +312,14 @@ def check_destination(path: Path, data_root: Path, *, force: bool = False) -> Pa
 def write_manifest(
     manifest: SourceManifest, path: Path, *, data_root: Path, force: bool = False
 ) -> None:
+    """Publish a source manifest; see :func:`publish_json`."""
+
+    publish_json(manifest.to_dict(), path, data_root=data_root, force=force)
+
+
+def publish_json(
+    payload_object: object, path: Path, *, data_root: Path, force: bool = False
+) -> None:
     """Publish deterministic JSON atomically, never inside the data root.
 
     The bytes go to a temporary file beside the destination and are then linked
@@ -321,7 +329,7 @@ def write_manifest(
 
     target = check_destination(path, data_root, force=force)
     target.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n"
+    payload = json.dumps(payload_object, indent=2, sort_keys=True, allow_nan=False) + "\n"
     fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
