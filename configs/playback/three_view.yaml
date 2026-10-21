@@ -1,3 +1,6 @@
+# Template: the source paths below are placeholders (relative to this file) and do
+# not exist in the repository. Point them at local copies or read-only NORMAN
+# references before running; otherwise playback writes a failed manifest.
 schema_version: 1
 dataset_id: norman
 episode_id: episode_00000

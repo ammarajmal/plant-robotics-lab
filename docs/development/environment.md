@@ -4,7 +4,7 @@ Python 3.12 is the preferred integration baseline because it is the minimum
 declared runtime and matches the project's Ruff target. Python 3.14 is also
 currently available for compatibility checks.
 
-uv is the canonical dependency manager. Use `uv sync --dev` to create or update
+uv is the canonical dependency manager. Use `uv sync --extra dev` to create or update
 the managed environment, `UV_CACHE_DIR=/tmp/prl-uv-cache uv lock --check` in
 restricted or read-only-cache environments, and `uv lock --upgrade` only for an
 intentional dependency refresh. Reproducible commands use `uv run prl ...` or

@@ -7,7 +7,7 @@ A research-grade engineering platform for autonomous strawberry plant care and h
 ## Quick start
 
 ```bash
-uv sync --dev
+uv sync --extra dev
 uv run pytest -q
 uv run ruff check .
 uv run ruff format --check .

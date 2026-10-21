@@ -1,0 +1,6 @@
+# Layout of NORMAN's internship dataset beneath PRL_DATA_ROOT (see .env.example).
+# PRL reads these files in place; it never copies or modifies them.
+schema_version: 1
+dataset_id: norman-internship-2026
+root_variable: PRL_DATA_ROOT
+layout: norman-internship-2026/raw/dataset/{task_id}/{episode_id}/{camera_id}.mp4

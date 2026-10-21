@@ -1,0 +1,49 @@
+{
+  "alignment": {
+    "exposure_synchronization": "unverified",
+    "timestamp_provenance": "nominal_frame_index"
+  },
+  "dataset_id": "norman-internship-2026",
+  "episode_id": "episode_00000",
+  "root_variable": "PRL_DATA_ROOT",
+  "schema_version": 1,
+  "streams": [
+    {
+      "backend": "FFMPEG",
+      "camera_id": "left_arm",
+      "codec": "h264",
+      "fps": 30.0,
+      "frame_count": 526,
+      "height": 480,
+      "relative_path": "norman-internship-2026/raw/dataset/leaf_removal_point_blue/episode_00000/left_arm.mp4",
+      "sha256": "dc76913b154065c2813a5463398df0f177903e10b3b8b234763efca658258ee7",
+      "size_bytes": 9297170,
+      "width": 640
+    },
+    {
+      "backend": "FFMPEG",
+      "camera_id": "middle",
+      "codec": "h264",
+      "fps": 30.0,
+      "frame_count": 526,
+      "height": 480,
+      "relative_path": "norman-internship-2026/raw/dataset/leaf_removal_point_blue/episode_00000/middle.mp4",
+      "sha256": "59162fc097d07161e1bf0231b30bf015a49fc39cc9d2cc4672c4b97a1e2ce4e5",
+      "size_bytes": 3761584,
+      "width": 640
+    },
+    {
+      "backend": "FFMPEG",
+      "camera_id": "right_arm",
+      "codec": "h264",
+      "fps": 30.0,
+      "frame_count": 526,
+      "height": 480,
+      "relative_path": "norman-internship-2026/raw/dataset/leaf_removal_point_blue/episode_00000/right_arm.mp4",
+      "sha256": "fc30eb8d3f3133c819e2b71fe7d363b81ec7ebadc2f1436056608f4985e08697",
+      "size_bytes": 20700152,
+      "width": 640
+    }
+  ],
+  "task_id": "leaf_removal_point_blue"
+}

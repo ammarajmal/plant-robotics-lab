@@ -1,3 +1,4 @@
+from plant_robotics.domain.datasets import ManifestError, SourceManifest, StreamRecord
 from plant_robotics.domain.video import (
     FramePacket,
     FrameTiming,
@@ -11,6 +12,9 @@ from plant_robotics.domain.video import (
 __all__ = [
     "FramePacket",
     "FrameTiming",
+    "ManifestError",
+    "SourceManifest",
+    "StreamRecord",
     "SynchronizationStatus",
     "ThreeViewPacket",
     "TimestampProvenance",

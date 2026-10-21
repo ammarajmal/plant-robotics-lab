@@ -1,7 +1,7 @@
 # ADR-0001: Independent Plant Robotics Lab repository
 
 - Date: 2026-10-18
-- Status: Proposed, awaiting repository creation
+- Status: Accepted; repository created (first commit `5fce0be`, 2026-10-19)
 
 ## Context
 Existing NORMAN tree contains valuable historical experiments and source code as well as mixed storage, runtimes, documentation, and large datasets.
