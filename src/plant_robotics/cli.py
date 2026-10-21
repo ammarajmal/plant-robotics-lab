@@ -45,6 +45,7 @@ def _build_parser() -> argparse.ArgumentParser:
     verify = data_commands.add_parser("verify", help="compare a manifest with current files")
     verify.add_argument("--manifest", type=Path, required=True)
     verify.add_argument("--data-root", type=Path, help="defaults to the manifest's env variable")
+    verify.add_argument("--catalog", type=Path, help="also bind the manifest to its catalog")
     verify.add_argument("--no-hash", action="store_true", help="skip SHA-256 comparison")
     return parser
 
@@ -77,7 +78,8 @@ def _data(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
             return
         manifest = load_manifest(args.manifest)
         root = resolve_data_root(args.data_root, manifest.root_variable)
-        result = verify_episode(manifest, root, compute_hash=not args.no_hash)
+        catalog = load_catalog(args.catalog) if args.catalog else None
+        result = verify_episode(manifest, root, compute_hash=not args.no_hash, catalog=catalog)
     except (ManifestError, SourceResolutionError, VideoIngestionError, OSError) as exc:
         parser.exit(2, f"prl: error: {exc}\n")
     if not result.ok:
