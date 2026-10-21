@@ -28,6 +28,25 @@ a failed write leaves any existing manifest intact. `--no-hash` skips SHA-256 on
 hashes were not checked and the manifest records `sha256: null` (unverified,
 never "unchanged").
 
+## Catalog binding and decode audit (PRL-006)
+
+```bash
+prl data verify --manifest M --catalog configs/data/norman_catalog.yaml
+prl data audit  --manifest M --catalog configs/data/norman_catalog.yaml \
+  --output artifacts/audit/<run>_decode_audit.json
+```
+
+- `--catalog` requires the manifest's `dataset_id`, `root_variable` and every stream
+  path to equal what the catalog prescribes. Any symlink component on a stream
+  path is rejected, even inside the data root. Identity and redirect errors exit 2.
+- `audit` decodes every frame of each stream, counts decoded frames independently of
+  the header, hashes decoded pixels (`prl-frame-v1`: dtype, shape, BGR, bytes), and
+  stores `CAP_PROP_POS_MSEC` as decoder-reported evidence only. Exit 0 means every
+  stream decoded completely, 1 means drift or an integrity finding (the JSON is still
+  written), 2 means invalid input.
+- A playback config may use `source_manifest: {manifest, catalog}` instead of view
+  paths; inputs are then verified before any frame is read.
+
 ## Design
 
 - `domain/datasets.py`: plain records (`StreamRecord`, `SourceManifest`) with
