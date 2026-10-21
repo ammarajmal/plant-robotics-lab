@@ -16,7 +16,15 @@ prl data verify --manifest data_manifests/norman_leaf_removal_point_blue_episode
 ```
 
 `verify` exits 0 when files match, 1 on drift (differences are printed), and 2
-on errors. `--no-hash` skips SHA-256 on large trees; the output then says
+on invalid input or execution errors (malformed or non-UTF-8 manifests and
+catalogs, NUL bytes in paths, missing files or roots). An uncaught exception
+would exit 1, so errors are mapped to 2 at the CLI boundary; only the project's
+own exceptions and `OSError` are caught there.
+
+`resolve` refuses to overwrite an existing `--output` (pass `--force` to
+replace it) and refuses a destination that is a symlink. The manifest is
+written to a temporary file beside the destination and published atomically, so
+a failed write leaves any existing manifest intact. `--no-hash` skips SHA-256 on large trees; the output then says
 hashes were not checked and the manifest records `sha256: null` (unverified,
 never "unchanged").
 
@@ -34,7 +42,8 @@ never "unchanged").
 - Paths in manifests are relative, normalized POSIX paths; absolute paths,
   `..`, and backslashes are rejected. Machine-specific roots never appear.
 - A symlink that resolves outside the data root is rejected.
-- Manifests cannot be written inside the data root.
+- Manifests cannot be written inside the data root, including through a symlinked
+  output directory; existing outputs and symlink destinations are refused.
 - The resolver works on a read-only tree and leaves file listings (size,
   mtime) unchanged.
 - Output is deterministic (sorted keys); repeat resolves are equal.
@@ -47,7 +56,8 @@ never "unchanged").
   PRL does not decode every frame here. A header can disagree with the real
   number of decodable frames.
 - A file could change between hashing and inspection (no locking). Run
-  `verify` again if a dataset may be changing.
+  `verify` again if a dataset may be changing. This and other open risks are
+  tracked in `docs/planning/risk_register.md`.
 - `backend` (the OpenCV decoder name) is recorded but not compared by
   `verify`, because it varies with the environment, not the data.
 - A matching hash shows the bytes are unchanged, not that the recording is

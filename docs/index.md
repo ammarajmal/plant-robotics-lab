@@ -2,6 +2,7 @@
 
 - [[planning/roadmap]] — milestones and learning path
 - [[planning/task_board]] — immediate tasks
+- [[planning/risk_register]] — known open risks
 - [[architecture/system_overview]] — component boundaries
 - [[architecture/glossary]] — consistent terminology
 - [[adr/0001-independent-repository]] — project independence
