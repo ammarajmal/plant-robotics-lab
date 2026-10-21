@@ -177,12 +177,76 @@ def test_manifest_write_is_deterministic_round_trips_and_refuses_the_data_root(
     text = out.read_text(encoding="utf-8")
     assert text.endswith("\n")
     assert load_manifest(out) == manifest
-    write_manifest(manifest, out, data_root=root)
+    write_manifest(manifest, out, data_root=root, force=True)
     assert out.read_text(encoding="utf-8") == text
 
     with pytest.raises(SourceResolutionError, match="inside the data root"):
         write_manifest(manifest, root / "manifest.json", data_root=root)
     assert not (root / "manifest.json").exists()
+
+
+def test_existing_manifest_is_refused_unless_forced(tmp_path: Path) -> None:
+    root = _tree(tmp_path)
+    manifest = resolve_episode(CATALOG, root, "task_a", "episode_00000")
+    out = tmp_path / "out" / "manifest.json"
+    out.parent.mkdir()
+    out.write_text("PRECIOUS", encoding="utf-8")
+    with pytest.raises(SourceResolutionError, match="--force"):
+        write_manifest(manifest, out, data_root=root)
+    assert out.read_text(encoding="utf-8") == "PRECIOUS"
+    assert [p.name for p in out.parent.iterdir()] == ["manifest.json"]
+
+    write_manifest(manifest, out, data_root=root, force=True)
+    assert load_manifest(out) == manifest
+    assert [p.name for p in out.parent.iterdir()] == ["manifest.json"]
+
+
+def test_failed_write_keeps_existing_manifest_and_leaves_no_temporary_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = _tree(tmp_path)
+    manifest = resolve_episode(CATALOG, root, "task_a", "episode_00000")
+    out = tmp_path / "out" / "manifest.json"
+    write_manifest(manifest, out, data_root=root)
+    before = out.read_bytes()
+
+    def explode(*_args: object, **_kwargs: object) -> None:
+        raise OSError("disk full")
+
+    monkeypatch.setattr("plant_robotics.io.resolver.os.replace", explode)
+    with pytest.raises(OSError, match="disk full"):
+        write_manifest(manifest, out, data_root=root, force=True)
+    assert out.read_bytes() == before
+    assert [p.name for p in out.parent.iterdir()] == ["manifest.json"]
+
+
+def test_output_symlinks_and_odd_names_are_refused(tmp_path: Path) -> None:
+    root = _tree(tmp_path)
+    manifest = resolve_episode(CATALOG, root, "task_a", "episode_00000")
+    out = tmp_path / "out"
+    out.mkdir()
+    victim = tmp_path / "victim.json"
+    victim.write_text("KEEP", encoding="utf-8")
+
+    (out / "link.json").symlink_to(victim)
+    for force in (False, True):
+        with pytest.raises(SourceResolutionError, match="symlink"):
+            write_manifest(manifest, out / "link.json", data_root=root, force=force)
+    assert victim.read_text(encoding="utf-8") == "KEEP"
+
+    (out / "dangling.json").symlink_to(tmp_path / "does-not-exist.json")
+    with pytest.raises(SourceResolutionError, match="symlink"):
+        write_manifest(manifest, out / "dangling.json", data_root=root, force=True)
+    assert not (tmp_path / "does-not-exist.json").exists()
+
+    (out / "into_root").symlink_to(root)
+    with pytest.raises(SourceResolutionError, match="inside the data root"):
+        write_manifest(manifest, out / "into_root" / "m.json", data_root=root)
+    assert not (root / "m.json").exists()
+
+    for name in (out / "..", out / ".", out):
+        with pytest.raises(SourceResolutionError):
+            write_manifest(manifest, name, data_root=root, force=True)
 
 
 def test_load_manifest_rejects_invalid_json_and_contract_violations(tmp_path: Path) -> None:

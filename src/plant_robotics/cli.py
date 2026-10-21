@@ -7,6 +7,7 @@ from pathlib import Path
 from plant_robotics.domain.datasets import ManifestError
 from plant_robotics.io.resolver import (
     SourceResolutionError,
+    check_destination,
     load_catalog,
     load_manifest,
     resolve_data_root,
@@ -39,6 +40,7 @@ def _build_parser() -> argparse.ArgumentParser:
     resolve.add_argument("--output", type=Path, required=True)
     resolve.add_argument("--data-root", type=Path, help="defaults to the catalog's env variable")
     resolve.add_argument("--no-hash", action="store_true", help="skip SHA-256 (marks unverified)")
+    resolve.add_argument("--force", action="store_true", help="replace an existing output file")
 
     verify = data_commands.add_parser("verify", help="compare a manifest with current files")
     verify.add_argument("--manifest", type=Path, required=True)
@@ -65,10 +67,11 @@ def _data(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
         if args.data_command == "resolve":
             catalog = load_catalog(args.catalog)
             root = resolve_data_root(args.data_root, catalog.root_variable)
+            check_destination(args.output, root, force=args.force)
             manifest = resolve_episode(
                 catalog, root, args.task_id, args.episode_id, compute_hash=not args.no_hash
             )
-            write_manifest(manifest, args.output, data_root=root)
+            write_manifest(manifest, args.output, data_root=root, force=args.force)
             hashed = "unverified (no hashes)" if args.no_hash else "SHA-256 recorded"
             print(f"manifest written: {args.output} [{hashed}]")
             return

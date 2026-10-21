@@ -196,3 +196,31 @@ def test_exit_codes_distinguish_match_drift_and_error(setup: dict[str, Path]) ->
     (setup["root"] / "ds/raw/task_a/episode_00000/middle.mp4").write_bytes(b"changed")
     assert _exit_code(_verify_argv(setup["out"], setup["root"])) == 1
     assert _exit_code(_verify_argv(setup["out"].with_name("absent.json"), setup["root"])) == 2
+
+
+def test_resolve_refuses_existing_output_unless_forced(
+    setup: dict[str, Path], capsys: pytest.CaptureFixture
+) -> None:
+    setup["out"].parent.mkdir()
+    setup["out"].write_text("PRECIOUS", encoding="utf-8")
+    with pytest.raises(SystemExit) as raised:
+        _resolve(setup)
+    assert raised.value.code == 2
+    assert "--force" in capsys.readouterr().err
+    assert setup["out"].read_text(encoding="utf-8") == "PRECIOUS"
+
+    _resolve(setup, "--force")
+    assert json.loads(setup["out"].read_text(encoding="utf-8"))["task_id"] == "task_a"
+
+
+def test_resolve_refuses_output_before_hashing(
+    setup: dict[str, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fail(_path: Path) -> str:
+        raise AssertionError("hashed before the destination was checked")
+
+    monkeypatch.setattr("plant_robotics.io.resolver.sha256_file", fail)
+    setup["out"] = setup["root"] / "manifest.json"
+    with pytest.raises(SystemExit) as raised:
+        _resolve(setup)
+    assert raised.value.code == 2

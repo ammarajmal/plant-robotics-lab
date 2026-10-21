@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -228,17 +229,61 @@ def verify_episode(
     return VerificationResult(tuple(differences), hashes_checked)
 
 
-def write_manifest(manifest: SourceManifest, path: Path, *, data_root: Path) -> None:
-    """Write deterministic JSON, refusing any location inside the data root."""
+def check_destination(path: Path, data_root: Path, *, force: bool = False) -> Path:
+    """Return the manifest destination, or raise if writing there would be unsafe.
+
+    The parent directory is resolved (so a symlinked directory cannot smuggle the
+    file into the data root) but the final component is not: a destination that
+    is itself a symlink is always refused, and an existing file needs ``force``.
+    """
 
     root = Path(data_root).resolve()
-    target = Path(path).resolve()
+    requested = Path(path)
+    if requested.name in ("", ".", ".."):
+        raise SourceResolutionError(f"output must name a file: {path}")
+    target = requested.parent.resolve() / requested.name
     if target.is_relative_to(root):
         raise SourceResolutionError(f"refusing to write inside the data root: {target}")
+    if target.is_symlink():
+        raise SourceResolutionError(f"refusing to write through a symlink: {target}")
+    if target.exists() and not target.is_file():
+        raise SourceResolutionError(f"destination exists and is not a regular file: {target}")
+    if target.exists() and not force:
+        raise SourceResolutionError(f"destination exists (pass --force to replace): {target}")
+    return target
+
+
+def write_manifest(
+    manifest: SourceManifest, path: Path, *, data_root: Path, force: bool = False
+) -> None:
+    """Publish deterministic JSON atomically, never inside the data root.
+
+    The bytes go to a temporary file beside the destination and are then linked
+    (no overwrite) or renamed (``force``) into place, so readers never see a
+    partial manifest and a failed write leaves any existing manifest untouched.
+    """
+
+    target = check_destination(path, data_root, force=force)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    payload = json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n"
+    fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, 0o644)
+        if force:
+            os.replace(temporary, target)
+        else:
+            try:
+                os.link(temporary, target)
+            except FileExistsError as exc:
+                raise SourceResolutionError(
+                    f"destination exists (pass --force to replace): {target}"
+                ) from exc
+    finally:
+        Path(temporary).unlink(missing_ok=True)
 
 
 def load_manifest(path: Path) -> SourceManifest:
