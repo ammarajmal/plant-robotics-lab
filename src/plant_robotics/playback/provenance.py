@@ -14,15 +14,8 @@ import cv2
 import numpy as np
 
 from plant_robotics import __version__
+from plant_robotics.io.hashing import sha256_file as sha256_file  # re-exported for callers
 from plant_robotics.playback.config import PlaybackConfig
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as source:
-        for block in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def config_checksum(config: PlaybackConfig) -> str:
