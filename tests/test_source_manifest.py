@@ -51,7 +51,20 @@ def test_relative_path_accepts_normalized_posix_paths(value: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "value", ["", "/abs/a.mp4", "../a.mp4", "a/../b", "a//b", "./a", "a\\b", "a/", "C:\\a"]
+    "value",
+    [
+        "",
+        "/abs/a.mp4",
+        "../a.mp4",
+        "a/../b",
+        "a//b",
+        "./a",
+        "a\\b",
+        "a/",
+        "C:\\a",
+        "a\x00b.mp4",
+        "\x00",
+    ],
 )
 def test_relative_path_rejects_absolute_traversal_and_non_normalized(value: str) -> None:
     with pytest.raises(ManifestError):

@@ -144,3 +144,55 @@ def test_status_and_playback_usage_are_unchanged(capsys: pytest.CaptureFixture) 
         main(["playback"])
     assert raised.value.code == 2
     assert "playback requires" in capsys.readouterr().err
+
+
+def _exit_code(argv: list[str]) -> int:
+    with pytest.raises(SystemExit) as raised:
+        main(argv)
+    return raised.value.code
+
+
+def _verify_argv(manifest: Path, root: Path) -> list[str]:
+    return ["data", "verify", "--manifest", str(manifest), "--data-root", str(root)]
+
+
+def test_nul_byte_in_manifest_path_exits_2_not_a_traceback(
+    setup: dict[str, Path], capsys: pytest.CaptureFixture
+) -> None:
+    _resolve(setup)
+    raw = json.loads(setup["out"].read_text(encoding="utf-8"))
+    raw["streams"][0]["relative_path"] = "ds/raw/task_a/episode_00000/left\x00arm.mp4"
+    bad = setup["out"].with_name("nul.json")
+    bad.write_text(json.dumps(raw), encoding="utf-8")
+    assert _exit_code(_verify_argv(bad, setup["root"])) == 2
+    assert "relative_path" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("command", ["verify", "resolve"])
+def test_non_utf8_input_exits_2(
+    setup: dict[str, Path], capsys: pytest.CaptureFixture, command: str
+) -> None:
+    binary = setup["out"].parent / "binary"
+    binary.parent.mkdir(exist_ok=True)
+    binary.write_bytes(b"\xff\xfe\x00bad")
+    if command == "verify":
+        argv = _verify_argv(binary, setup["root"])
+    else:
+        setup["catalog"] = binary
+        argv = [
+            "data", "resolve", "--catalog", str(binary), "--task-id", "task_a",
+            "--episode-id", "episode_00000", "--output", str(setup["out"]),
+            "--data-root", str(setup["root"]),
+        ]  # fmt: skip
+    assert _exit_code(argv) == 2
+    assert "UTF-8" in capsys.readouterr().err
+    assert not setup["out"].exists()
+
+
+def test_exit_codes_distinguish_match_drift_and_error(setup: dict[str, Path]) -> None:
+    _resolve(setup)
+    main(_verify_argv(setup["out"], setup["root"]))  # exit 0 returns normally
+
+    (setup["root"] / "ds/raw/task_a/episode_00000/middle.mp4").write_bytes(b"changed")
+    assert _exit_code(_verify_argv(setup["out"], setup["root"])) == 1
+    assert _exit_code(_verify_argv(setup["out"].with_name("absent.json"), setup["root"])) == 2

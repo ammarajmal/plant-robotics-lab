@@ -80,6 +80,8 @@ def load_catalog(path: Path) -> Catalog:
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise ManifestError(f"invalid YAML: {path}") from exc
+    except UnicodeDecodeError as exc:
+        raise ManifestError(f"catalog is not valid UTF-8: {path}") from exc
     if not isinstance(raw, dict):
         raise ManifestError("catalog root must be a mapping")
     if raw.keys() - _CATALOG_KEYS:
@@ -240,7 +242,10 @@ def write_manifest(manifest: SourceManifest, path: Path, *, data_root: Path) -> 
 
 
 def load_manifest(path: Path) -> SourceManifest:
-    text = Path(path).read_text(encoding="utf-8")
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise ManifestError(f"manifest is not valid UTF-8: {path}") from exc
     try:
         raw = json.loads(text)
     except json.JSONDecodeError as exc:

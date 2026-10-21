@@ -195,6 +195,16 @@ def test_load_manifest_rejects_invalid_json_and_contract_violations(tmp_path: Pa
         load_manifest(bad)
     with pytest.raises(FileNotFoundError):
         load_manifest(tmp_path / "missing.json")
+    bad.write_bytes(b"\xff\xfe\x00{")
+    with pytest.raises(ManifestError, match="UTF-8"):
+        load_manifest(bad)
+
+
+def test_load_catalog_rejects_non_utf8(tmp_path: Path) -> None:
+    path = tmp_path / "catalog.yaml"
+    path.write_bytes(b"\xff\xfe\x00bad")
+    with pytest.raises(ManifestError, match="UTF-8"):
+        load_catalog(path)
 
 
 def _catalog_file(tmp_path: Path, layout: str, **extra: str) -> Path:

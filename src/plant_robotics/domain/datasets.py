@@ -41,10 +41,12 @@ def validate_identifier(value: object, name: str) -> str:
 
 
 def validate_relative_path(value: object) -> str:
-    """Accept only normalized, relative, forward-slash paths without ``..``."""
+    """Accept only normalized, relative, forward-slash paths without ``..`` or NUL."""
 
-    if not isinstance(value, str) or not value or "\\" in value:
-        raise ManifestError(f"relative_path must be a non-empty POSIX path, got {value!r}")
+    if not isinstance(value, str) or not value or "\\" in value or "\x00" in value:
+        raise ManifestError(
+            f"relative_path must be a non-empty POSIX path without NUL, got {value!r}"
+        )
     path = PurePosixPath(value)
     if path.is_absolute() or ".." in path.parts or not path.parts or str(path) != value:
         raise ManifestError(f"relative_path must be normalized and relative, got {value!r}")
