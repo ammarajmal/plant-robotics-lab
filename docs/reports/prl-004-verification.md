@@ -6,7 +6,7 @@ plus the documentation and manifest added in the final commit.
 Environment: Python 3.12.13, NumPy 2.5.4, OpenCV 5.0.0 (`opencv-python-headless`),
 PyYAML 6.0.3 (uv-managed `.venv`).
 
-## Automated checks (run 2026-10-21)
+## Automated checks (run 2026-10-21, at the original evidence commit)
 
 ```text
 uv run pytest -q                    -> 79 passed
@@ -37,10 +37,13 @@ PRL-observed values for all three streams: 640x480, 30.0 fps, 526 frames
 `data_manifests/norman_leaf_removal_point_blue_episode_00000.json`.
 
 Comparison with NORMAN's historical stream audit
-(`results/p1/episode_00000_stream_audit.csv`, NORMAN's own result, not produced
-by PRL): SHA-256, width, fps, and frame count agree for `left_arm`, `middle`,
-and `right_arm`. PRL did not decode all frames, so agreement with the audit's
-*decoded* frame count is a metadata match, not an independent decode check.
+(`04_PROJECTS/norman_blue_tape_full/results/p1/episode_00000_stream_audit.csv`
+under the NORMAN root; NORMAN's own result, not produced by PRL): SHA-256,
+width, height, fps, and container-metadata frame count (`frame_count_meta`)
+agree for `left_arm`, `middle`, and `right_arm`. The audit's own decoded count
+(`frame_count_decoded`, 526) is NORMAN's result. PRL did not decode any frames,
+so PRL's agreement is a metadata and byte-identity match, not an independent
+decode check.
 
 NORMAN's Git status was captured before and after the run and was identical;
 NORMAN's working tree was already dirty before this task.
