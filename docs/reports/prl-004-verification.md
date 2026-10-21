@@ -53,3 +53,29 @@ NORMAN's working tree was already dirty before this task.
 Camera exposure synchronization, frame-timestamp accuracy, calibration,
 cross-view identity, tracking, 3D geometry, licence/reuse permission for NORMAN
 code, and playback of this real episode (not run in PRL-004).
+
+## Post-review remediation (2026-10-21)
+
+An independent review found: (M1) NUL bytes in a manifest path and non-UTF-8
+manifests/catalogs escaped as uncaught exceptions, exiting 1 (the drift code);
+(minor) `resolve` silently overwrote an existing output. Both are fixed with
+regression tests; the NORMAN audit path above was corrected. Open items
+(TOCTOU, symlink retargeting, manifest-to-catalog binding, duplicate YAML keys)
+are in `docs/planning/risk_register.md`.
+
+Re-run after the fixes (`.venv`, Python 3.12.13):
+
+```text
+pytest -q                          -> 91 passed
+ruff check .                       -> all checks passed
+ruff format --check .              -> 50 files already formatted
+compileall -q src tests            -> exit 0
+uv lock --check                    -> Resolved 11 packages (lock current)
+git diff --check 67f0acc..HEAD     -> exit 0
+prl data verify (real episode)     -> manifest matches ..., exit 0
+```
+
+The earlier "79 passed / 47 files" figures describe the original evidence commit.
+NORMAN's full `git status --porcelain=v2 --branch -uall` output, HEAD, and
+`git diff` hash were byte-identical before and after (NORMAN remained dirty from
+before this task).
