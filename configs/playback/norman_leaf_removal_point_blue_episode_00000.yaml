@@ -1,0 +1,19 @@
+# PRL-006: real-data three-view playback. Inputs are selected from a source
+# manifest that is bound to its catalog (task, episode, camera, no symlink
+# redirection) and re-verified by size, SHA-256 and metadata before any decode.
+# Set PRL_DATA_ROOT or pass --data-root. Frame-index pairing is visualization
+# only: no exposure synchronization or calibration is claimed.
+schema_version: 1
+dataset_id: norman-internship-2026
+episode_id: episode_00000
+run_id: prl006_episode00000
+output_dir: ../../artifacts/playback/prl006_episode00000
+source_manifest:
+  manifest: ../../data_manifests/norman_leaf_removal_point_blue_episode_00000.json
+  catalog: ../data/norman_catalog.yaml
+alignment:
+  strategy: frame_index_visualization_only
+  hardware_synchronization_verified: false
+  timestamp_provenance: nominal_frame_index
+output:
+  codec: mp4v

@@ -79,7 +79,9 @@ def render_three_view(config: PlaybackConfig) -> dict[str, Any]:
             streams.append(
                 {
                     "camera_id": info.camera_id,
-                    "source": path_reference(info.source_path, base=config.config_path.parent),
+                    "source": path_reference(
+                        info.source_path, base=config.config_path.parent, data_root=config.data_root
+                    ),
                     "source_sha256": sha256_file(info.source_path),
                     "width": info.width,
                     "height": info.height,
@@ -115,12 +117,16 @@ def render_three_view(config: PlaybackConfig) -> dict[str, Any]:
         outputs = [
             {
                 "kind": "playback_mp4",
-                "path": path_reference(output_path, base=config.config_path.parent),
+                "path": path_reference(
+                    output_path, base=config.config_path.parent, allow_parents=True
+                ),
                 "sha256": sha256_file(output_path),
             },
             {
                 "kind": "contact_sheet",
-                "path": path_reference(sheet_path, base=config.config_path.parent),
+                "path": path_reference(
+                    sheet_path, base=config.config_path.parent, allow_parents=True
+                ),
                 "sha256": sha256_file(sheet_path),
             },
         ]

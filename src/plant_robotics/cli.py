@@ -32,6 +32,7 @@ def _build_parser() -> argparse.ArgumentParser:
     playback.add_argument("mode", nargs="?", choices=["three-view"])
     playback.add_argument("--config", type=Path)
     playback.add_argument("--output-dir", type=Path)
+    playback.add_argument("--data-root", type=Path, help="for configs using source_manifest")
 
     data = commands.add_parser("data", help="read-only dataset source manifests")
     data_commands = data.add_subparsers(dest="data_command", required=True)
@@ -64,7 +65,7 @@ def _playback(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None
     if args.mode != "three-view" or args.config is None:
         parser.error("playback requires: prl playback three-view --config PATH")
     try:
-        config = load_config(args.config)
+        config = load_config(args.config, data_root=args.data_root)
         if args.output_dir is not None:
             config = replace(config, output_dir=args.output_dir)
         render_three_view(config)
