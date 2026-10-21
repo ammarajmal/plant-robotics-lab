@@ -4,7 +4,7 @@
 - [ ] Create separate Git repository and verify package installation
 - [ ] Run scaffold unit tests; record versions
 - [ ] Decide licenses and NORMAN source reuse permissions
-- [ ] Establish data and model asset manifest
+- [ ] Establish data and model asset manifest (data: `episode_00000` only, PRL-004 in review; models: not started)
 
 ## M1 — Multi-camera input
 - [x] Audit existing deterministic decoder
