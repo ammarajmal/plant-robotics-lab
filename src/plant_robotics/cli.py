@@ -4,6 +4,7 @@ import argparse
 from dataclasses import replace
 from pathlib import Path
 
+from plant_robotics.doctor import report, run_checks
 from plant_robotics.domain.datasets import ManifestError, SourceManifest
 from plant_robotics.io.decode_audit import SourceDriftError, audit_episode
 from plant_robotics.io.hashing import sha256_file
@@ -27,6 +28,7 @@ def _build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     commands.add_parser("status", help="print installation status")
+    commands.add_parser("doctor", help="read-only environment readiness check")
 
     playback = commands.add_parser("playback", help="render headless playback evidence")
     playback.add_argument("mode", nargs="?", choices=["three-view"])
@@ -137,6 +139,9 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     if args.command == "status":
         print("PRL foundation and deterministic video ingestion are installed")
+    elif args.command == "doctor":
+        if not report(run_checks()):
+            raise SystemExit(1)
     elif args.command == "playback":
         _playback(parser, args)
     else:

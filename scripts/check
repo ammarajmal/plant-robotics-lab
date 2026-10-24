@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Local quality gate: the same commands CI will run. Read-only apart from tool caches.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+step() { printf '\n== %s\n' "$*"; }
+step "lockfile";  uv lock --check
+step "compile";   uv run python -m compileall -q src tests
+step "lint";      uv run ruff check .
+step "format";    uv run ruff format --check .
+step "tests";     uv run pytest -q
+step "whitespace"; git diff --check
+step "doctor";    uv run prl doctor
+printf '\nQUALITY GATE PASSED\n'
