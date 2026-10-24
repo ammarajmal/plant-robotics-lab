@@ -7,6 +7,7 @@
 - [[architecture/glossary]] — consistent terminology
 - [[adr/0001-independent-repository]] — project independence
 - [[development/git_workflow]] — development practices
+- [[development/git_guide]] — Git concepts, remote setup, recovery and practice exercises
 - [[development/migration_and_provenance]] — source reuse protocol
 - [[development/data_sources]] — read-only data-source manifests (PRL-004)
 - [[development/playback]] — playback architecture and test strategy
