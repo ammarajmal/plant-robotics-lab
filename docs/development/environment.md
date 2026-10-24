@@ -52,3 +52,16 @@ uv sync --extra dev
 New workstation: install `git`, `uv` and the GitHub CLI; `gh auth login`; `git clone https://github.com/ammarajmal/plant-robotics-lab.git`; run the block above. Then set `PRL_DATA_ROOT` (see `.env.example` and `data_sources.md`) and run `uv run prl doctor`. Raw data, recordings and model weights are not in Git and must be restored separately.
 
 What is and is not backed up: committed work is on `origin` once pushed (private GitHub repository; `main` is not branch-protected on this plan, so a green CI check is a rule you follow, not one GitHub enforces). Unpushed branches, `.venv`, caches and everything under the data and model roots exist only on this disk. A disk-level backup of the data root is an open task on the task board.
+
+## Robotics prerequisites by milestone (configuration only, nothing installed for these)
+
+Do each item when its milestone starts, not before. Machine-specific editor settings (for example ROS 2 paths) belong in your personal VS Code user settings, not in the tracked `.vscode/settings.json`.
+
+| Milestone | Before starting, do this | Verify with |
+|---|---|---|
+| M3 perception | Create a separate GPU env (Python 3.12, PyTorch CUDA wheel, SAM 2.1, DINOv3 loaders); point `PRL_MODEL_ROOT` at the checkpoints | `torch.cuda.is_available()`; `sha256sum` against `model_manifests/` |
+| M5 simulation | Obtain a verified SO-101 MJCF/URDF and set `robot_model` in `configs/simulation/so101.yaml` (it is `null` now); keep `allow_hardware_commands: false`; use the `lerobot` env for MuJoCo | Load the model headless; check joint names and limits against the vendor description |
+| M5+ ROS 2 | Source `/opt/ros/lyrical/setup.bash` only in the shell that needs it, never in `~/.bashrc`; Python 3.14 only | `ros2 doctor` |
+| M6 hardware | Written, supervised procedure with a physical stop; explicit approval per session. No code path commands hardware unattended | Procedure reviewed before first power-on |
+
+Isaac Sim and MoveIt 2 are not installed and stay deferred until a milestone names them.
