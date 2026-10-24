@@ -1,0 +1,22 @@
+{
+  "files": [
+    {
+      "relative_path": "dinov3/dinov3_vitl16_dinotxt_vision_head_and_text_encoder.pth",
+      "sha256": "a442d8f52a3a7ad715bf6b7d8117fb3a84d54249389b0a13f6956cd0d2eca4f0",
+      "size_bytes": 2253936683
+    },
+    {
+      "relative_path": "dinov3/dinov3_vitl16_pretrain_lvd1689m-8aa4cbdd.pth",
+      "sha256": "8aa4cbddda325040fc78db2c272754af6ebe8ff2c55f6ec4f1964d8890f66035",
+      "size_bytes": 1213050671
+    },
+    {
+      "relative_path": "sam2.1/sam2.1_hiera_small.pt",
+      "sha256": "6d1aa6f30de5c92224f8172114de081d104bbd23dd9dc5c58996f0cad5dc4d38",
+      "size_bytes": 184416285
+    }
+  ],
+  "note": "Local fingerprints of files as found on this workstation. Upstream origin and licence are NOT verified.",
+  "root_variable": "PRL_MODEL_ROOT",
+  "schema": "prl-model-manifest-v1"
+}
