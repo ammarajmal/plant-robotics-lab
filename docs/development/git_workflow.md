@@ -9,3 +9,5 @@
 7. Review evidence and update the relevant milestone.
 
 Never `git add .` before reviewing untracked ML artifacts and local paths.
+
+For concepts, recovery and practice exercises see [[development/git_guide]].
