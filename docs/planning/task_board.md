@@ -8,6 +8,8 @@
 - REVIEW PRL-006 — Real-data playback and source integrity (branch `feat/prl-006-real-data-playback`; evidence: `docs/reports/prl-006-verification.md`; merged to `main` in PR #1 on 2026-10-24; independent review not confirmed, so not DONE; closes R-004-3)
 - TODO PRL-007 — Reproduce and holdout-test Q=10 Kalman result (renumbered from PRL-006 on 2026-10-21)
 - TODO PRL-008 — Hardlink-free manifest publication fallback for filesystems without `os.link` (deferred from PRL-004 review; see R-004-7)
+- TODO PRL-009 — Off-disk backup of the data and model roots; record SHA-256 and origin of the SAM 2.1 and DINOv3 checkpoints
+- TODO PRL-010 — Decide whether to add a type checker and pre-commit hooks; decide GitHub plan or visibility for branch protection
 
 Renumbered on 2026-10-21 to match Git history; the Kalman holdout task moved from PRL-006 to PRL-007 when PRL-006 was assigned to real-data playback. Old IDs: 001→PRL-001, 003+004→PRL-002, 005→PRL-003, 002 (asset manifest part)→PRL-004, 002 (audit part)→PRL-005, 006 unchanged.
 
