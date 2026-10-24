@@ -65,3 +65,36 @@ Do each item when its milestone starts, not before. Machine-specific editor sett
 | M6 hardware | Written, supervised procedure with a physical stop; explicit approval per session. No code path commands hardware unattended | Procedure reviewed before first power-on |
 
 Isaac Sim and MoveIt 2 are not installed and stay deferred until a milestone names them.
+
+## Installing tools when a milestone starts
+
+State on 2026-10-25: the `lerobot` conda env has torch 2.11.0+cu128, torchvision, lerobot 0.6.1, mujoco 3.8.1, gymnasium, scipy, pandas, scikit-image and OpenCV. It has no sam2, dinov3, open3d, scikit-learn or matplotlib. MoveIt is not installed. Nothing below has been run yet; each block is a plan to execute at the stated milestone, then record the versions here.
+
+Rules: one environment per row; create new ones under `/mnt/space/adev/envs/` (517 GB free; `/home` has 81 GB); never run `pip install -e` or build inside NORMAN, because that writes into a read-only reference; install upstream projects from a fresh clone at a pinned commit; no system `nvcc` or driver changes are needed for the PyTorch wheels.
+
+**Statistics and analysis (needed for PRL-007).** Add to the PRL core only what the code imports, as an optional extra so `uv.lock` records it:
+
+```bash
+uv add --optional analysis scipy pandas matplotlib scikit-learn
+uv sync --extra dev --extra analysis && ./scripts/check
+```
+
+**GPU perception (M3).**
+
+```bash
+uv venv /mnt/space/adev/envs/prl-perception --python 3.12
+source /mnt/space/adev/envs/prl-perception/bin/activate
+uv pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+git clone https://github.com/facebookresearch/sam2 /mnt/space/adev/third_party/sam2   # then: git checkout <pinned commit>
+uv pip install -e /mnt/space/adev/third_party/sam2
+uv pip install transformers timm opencv-python-headless scipy
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"
+```
+
+DINOv3 is loaded from Meta's official repo or Hugging Face `transformers` using the checkpoint you already hold. Verify the checkpoints with `sha256sum` against `model_manifests/`.
+
+**Robot learning and simulation (M5/M6).** Keep using the `lerobot` env. Add `matplotlib` there only if needed. Verify MuJoCo headless: `python -c "import mujoco; print(mujoco.__version__)"`, then load the verified SO-101 model.
+
+**ROS 2, Gazebo, MoveIt 2 (M5+).** Needs `sudo apt` and is the one step you run yourself, after reading what apt will add: `apt-cache policy ros-lyrical-moveit ros-lyrical-ros-gz`. Source ROS only in the shell that uses it.
+
+**Deferred.** Isaac Sim (heavy, separate Python, 12 GB GPU is marginal). 3D Gaussian splatting needs a CUDA toolkit and a compiler version the toolkit supports (gcc 15 is likely too new); it is not in PRL scope. Open3D and COLMAP when M4 geometry needs them.
