@@ -8,7 +8,18 @@ from typing import Any
 
 import yaml
 
+from plant_robotics.domain.datasets import ManifestError
 from plant_robotics.domain.video import CameraId, ViewSpec
+from plant_robotics.io.hashing import sha256_file
+from plant_robotics.io.resolver import (
+    SourceResolutionError,
+    load_catalog,
+    load_manifest,
+    locate_stream,
+    open_root,
+    resolve_data_root,
+    verify_episode,
+)
 
 CAMERAS: tuple[CameraId, ...] = ("left_arm", "middle", "right_arm")
 
@@ -29,6 +40,9 @@ class PlaybackConfig:
     fps: float | None = None
     start_frame: int = 0
     stop_frame: int | None = None
+    data_root: Path | None = None
+    source_manifest: Path | None = None
+    source_manifest_sha256: str | None = None
 
     @property
     def resolved_output_dir(self) -> Path:
@@ -46,7 +60,39 @@ def _required(mapping: dict[str, Any], key: str) -> str:
     return value
 
 
-def load_config(path: Path) -> PlaybackConfig:
+def _views_from_manifest(
+    raw: object, config_path: Path, dataset_id: str, episode_id: str, data_root: Path | None
+) -> tuple[list[ViewSpec], Path, Path, str]:
+    """Select inputs from a source manifest after binding it to its catalog."""
+
+    if not isinstance(raw, dict) or set(raw) != {"manifest", "catalog"}:
+        raise ConfigError("source_manifest must be a mapping with exactly: manifest, catalog")
+    manifest_path = (config_path.parent / str(raw["manifest"])).resolve()
+    catalog_path = (config_path.parent / str(raw["catalog"])).resolve()
+    try:
+        manifest = load_manifest(manifest_path)
+        catalog = load_catalog(catalog_path)
+        root = open_root(resolve_data_root(data_root, manifest.root_variable))
+        if (manifest.dataset_id, manifest.episode_id) != (dataset_id, episode_id):
+            raise ConfigError(
+                f"config names {dataset_id}/{episode_id} but the manifest describes "
+                f"{manifest.dataset_id}/{manifest.episode_id}"
+            )
+        result = verify_episode(manifest, root, catalog=catalog)
+        if not result.ok:
+            raise ConfigError(
+                "source manifest differs from files: " + "; ".join(result.differences)
+            )
+        views = [
+            ViewSpec(s.camera_id, locate_stream(root, s.relative_path, s.camera_id))
+            for s in manifest.streams
+        ]
+    except (ManifestError, SourceResolutionError, OSError) as exc:
+        raise ConfigError(f"source manifest rejected: {exc}") from exc
+    return views, root, manifest_path, sha256_file(manifest_path)
+
+
+def load_config(path: Path, *, data_root: Path | None = None) -> PlaybackConfig:
     """Load and validate configuration before opening any source or writer."""
 
     config_path = Path(path).resolve()
@@ -82,10 +128,20 @@ def load_config(path: Path) -> PlaybackConfig:
     ):
         raise ConfigError("stop_frame must be an integer greater than start_frame")
     raw_views = raw.get("views")
-    if not isinstance(raw_views, list) or len(raw_views) != 3:
-        raise ConfigError("views must contain exactly three entries")
     views: list[ViewSpec] = []
-    for expected, item in zip(CAMERAS, raw_views, strict=True):
+    root: Path | None = None
+    manifest_path: Path | None = None
+    manifest_sha: str | None = None
+    if "source_manifest" in raw:
+        if raw_views is not None:
+            raise ConfigError("give either views or source_manifest, not both")
+        views, root, manifest_path, manifest_sha = _views_from_manifest(
+            raw["source_manifest"], config_path, dataset_id, episode_id, data_root
+        )
+        raw_views = []
+    elif not isinstance(raw_views, list) or len(raw_views) != 3:
+        raise ConfigError("views must contain exactly three entries")
+    for expected, item in zip(CAMERAS, raw_views, strict=False):
         if not isinstance(item, dict) or item.get("camera_id") != expected:
             raise ConfigError(f"views must be ordered {CAMERAS}")
         source = item.get("source")
@@ -106,4 +162,7 @@ def load_config(path: Path) -> PlaybackConfig:
         fps=float(fps) if fps is not None else None,
         start_frame=start_frame,
         stop_frame=stop_frame,
+        data_root=root,
+        source_manifest=manifest_path,
+        source_manifest_sha256=manifest_sha,
     )

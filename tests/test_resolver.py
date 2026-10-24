@@ -12,7 +12,10 @@ import pytest
 from plant_robotics.domain.datasets import ManifestError
 from plant_robotics.io.resolver import (
     Catalog,
+    IdentityMismatchError,
     SourceResolutionError,
+    SymlinkRedirectError,
+    check_identity,
     load_catalog,
     load_manifest,
     resolve_data_root,
@@ -321,3 +324,107 @@ def test_resolve_data_root_prefers_argument_then_environment(tmp_path: Path) -> 
         resolve_data_root(None, "PRL_DATA_ROOT", {})
     with pytest.raises(SourceResolutionError, match="PRL_DATA_ROOT"):
         resolve_data_root(None, "PRL_DATA_ROOT", {"PRL_DATA_ROOT": "  "})
+
+
+# --- identity binding (R-004-3) -------------------------------------------------
+
+
+def _manifest(tmp_path: Path):
+    root = _tree(tmp_path)
+    return root, resolve_episode(CATALOG, root, "task_a", "episode_00000")
+
+
+def _with(manifest, **fields):
+    from dataclasses import replace
+
+    return replace(manifest, **fields)
+
+
+def _with_stream(manifest, index: int, **fields):
+    from dataclasses import replace
+
+    streams = list(manifest.streams)
+    streams[index] = replace(streams[index], **fields)
+    return _with(manifest, streams=tuple(streams))
+
+
+def test_matching_identity_verifies_with_catalog(tmp_path: Path) -> None:
+    root, manifest = _manifest(tmp_path)
+    check_identity(manifest, CATALOG)
+    assert verify_episode(manifest, root, catalog=CATALOG).ok
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda m: _with(m, dataset_id="other"),
+        lambda m: _with(m, root_variable="OTHER_ROOT"),
+        lambda m: _with(m, episode_id="episode_00001"),
+        lambda m: _with(m, task_id="task_b"),
+        lambda m: _with_stream(m, 1, relative_path=m.streams[0].relative_path),  # camera swap
+        lambda m: _with_stream(
+            m, 0, relative_path="ds/raw/task_a/episode_00001/left_arm.mp4"
+        ),  # other episode
+        lambda m: _with_stream(m, 2, relative_path="ds/raw/task_a/episode_00000/right_arm.MP4"),
+        lambda m: _with_stream(m, 0, relative_path="elsewhere/left_arm.mp4"),
+    ],
+)
+def test_identity_mismatches_are_rejected(tmp_path: Path, mutate) -> None:
+    root, manifest = _manifest(tmp_path)
+    with pytest.raises(IdentityMismatchError):
+        verify_episode(mutate(manifest), root, catalog=CATALOG)
+
+
+def test_different_catalog_layout_is_rejected(tmp_path: Path) -> None:
+    root, manifest = _manifest(tmp_path)
+    other = Catalog("synthetic", "PRL_DATA_ROOT", "ds/{task_id}/{episode_id}/{camera_id}.mp4")
+    with pytest.raises(IdentityMismatchError):
+        verify_episode(manifest, root, catalog=other)
+
+
+def test_in_root_symlink_to_another_camera_or_episode_is_rejected(tmp_path: Path) -> None:
+    root, manifest = _manifest(tmp_path)
+    folder = root / "ds/raw/task_a/episode_00000"
+    other = root / "ds/raw/task_a/episode_00001"
+    other.mkdir(parents=True)
+    _video(other / "left_arm.mp4", 4)
+
+    middle = folder / "middle.mp4"
+    middle.unlink()
+    middle.symlink_to(folder / "left_arm.mp4")  # another camera, same bytes as left
+    with pytest.raises(SymlinkRedirectError, match="redirected"):
+        verify_episode(manifest, root, catalog=CATALOG)
+    with pytest.raises(SymlinkRedirectError):
+        resolve_episode(CATALOG, root, "task_a", "episode_00000")
+
+    middle.unlink()
+    _video(middle)
+    left = folder / "left_arm.mp4"
+    left.unlink()
+    left.symlink_to(other / "left_arm.mp4")  # another episode
+    with pytest.raises(SymlinkRedirectError):
+        verify_episode(manifest, root, catalog=CATALOG)
+
+
+def test_symlinked_directory_and_chains_are_rejected(tmp_path: Path) -> None:
+    root, manifest = _manifest(tmp_path)
+    raw = root / "ds/raw"
+    real = root / "ds/real_task_a"
+    (raw / "task_a").rename(real)
+    (raw / "task_a").symlink_to(real)
+    with pytest.raises(SymlinkRedirectError):
+        verify_episode(manifest, root, catalog=CATALOG)
+
+
+def test_cli_maps_identity_and_redirect_errors_to_exit_2(tmp_path: Path) -> None:
+    from plant_robotics.cli import main
+
+    root, manifest = _manifest(tmp_path)
+    out = tmp_path / "m.json"
+    write_manifest(manifest, out, data_root=root)
+    catalog = _catalog_file(tmp_path, "ds/other/{task_id}/{episode_id}/{camera_id}.mp4")
+    argv = ["data", "verify", "--manifest", str(out), "--data-root", str(root)]
+    main(argv)  # without a catalog: unchanged behaviour, exit 0
+    with pytest.raises(SystemExit) as raised:
+        main([*argv, "--catalog", str(catalog)])
+    assert raised.value.code == 2

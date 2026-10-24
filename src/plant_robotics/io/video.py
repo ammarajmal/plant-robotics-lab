@@ -49,7 +49,7 @@ def _validate_camera_id(camera_id: str) -> CameraId:
     return camera_id  # type: ignore[return-value]
 
 
-def _open_capture(path: Path) -> cv2.VideoCapture:
+def open_capture(path: Path) -> cv2.VideoCapture:
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -65,7 +65,7 @@ def inspect_video(path: Path, camera_id: str) -> VideoStreamInfo:
 
     valid_camera = _validate_camera_id(camera_id)
     path = Path(path)
-    capture = _open_capture(path)
+    capture = open_capture(path)
     try:
         width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -100,7 +100,7 @@ def read_frame(path: Path, frame_index: int) -> np.ndarray:
 
     if frame_index < 0:
         raise ValueError(f"frame_index must be non-negative, got {frame_index!r}")
-    capture = _open_capture(Path(path))
+    capture = open_capture(Path(path))
     try:
         for decoded_count in range(frame_index + 1):
             ok, frame = capture.read()
@@ -152,7 +152,7 @@ def iter_three_view(
         raise ValueError(
             f"stop_frame must be in [{start_frame}, {infos[0].frame_count}], got {end_frame}"
         )
-    captures = tuple(_open_capture(spec.source) for spec in specs)
+    captures = tuple(open_capture(spec.source) for spec in specs)
     try:
         for skipped_index in range(start_frame):
             for capture, info in zip(captures, infos, strict=True):

@@ -40,6 +40,14 @@ class SourceResolutionError(ValueError):
     """A data root, path, or output location cannot be used safely."""
 
 
+class SymlinkRedirectError(SourceResolutionError):
+    """A stream path reaches a different physical file than its lexical path names."""
+
+
+class IdentityMismatchError(ManifestError):
+    """A manifest does not describe the stream locations its catalog expects."""
+
+
 @dataclass(frozen=True, slots=True)
 class Catalog:
     """How one dataset arranges episode videos beneath its data root."""
@@ -111,19 +119,35 @@ def resolve_data_root(
     return Path(value)
 
 
-def _open_root(data_root: Path) -> Path:
+def open_root(data_root: Path) -> Path:
     root = Path(data_root).resolve()
     if not root.is_dir():
         raise SourceResolutionError(f"data root is not a directory: {root}")
     return root
 
 
-def _locate(root: Path, relative_path: str, camera: str) -> Path:
-    """Resolve symlinks and require the file to stay inside the root."""
+def locate_stream(root: Path, relative_path: str, camera: str) -> Path:
+    """Public alias used by playback and audit to open a verified stream."""
 
-    resolved = (root / relative_path).resolve()
+    return _locate(root, relative_path, camera)
+
+
+def _locate(root: Path, relative_path: str, camera: str) -> Path:
+    """Require a regular file at exactly this path: no symlink may redirect it.
+
+    Any symlink component, even one staying inside the root, could substitute a
+    different episode or camera, so it is rejected rather than followed.
+    """
+
+    unresolved = root / relative_path
+    resolved = unresolved.resolve()
     if not resolved.is_relative_to(root):
-        raise SourceResolutionError(f"{camera}: path resolves outside the data root")
+        raise SymlinkRedirectError(f"{camera}: path resolves outside the data root")
+    if resolved != unresolved:
+        raise SymlinkRedirectError(
+            f"{camera}: {relative_path} is redirected by a symlink to "
+            f"{resolved.relative_to(root).as_posix()}"
+        )
     if not resolved.is_file():
         raise SourceResolutionError(f"{camera}: source file not found: {relative_path}")
     return resolved
@@ -158,7 +182,7 @@ def resolve_episode(
 
     validate_identifier(task_id, "task_id")
     validate_identifier(episode_id, "episode_id")
-    root = _open_root(data_root)
+    root = open_root(data_root)
     streams = tuple(
         _observe(
             root,
@@ -189,16 +213,46 @@ class VerificationResult:
         return not self.differences
 
 
+def check_identity(manifest: SourceManifest, catalog: Catalog) -> None:
+    """Require the manifest to name exactly the locations its catalog prescribes.
+
+    Pure string comparison, so manifests stay portable. Raises
+    :class:`IdentityMismatchError` (an input error, not drift).
+    """
+
+    for name in ("dataset_id", "root_variable"):
+        if getattr(manifest, name) != getattr(catalog, name):
+            raise IdentityMismatchError(
+                f"{name}: manifest {getattr(manifest, name)!r} != catalog "
+                f"{getattr(catalog, name)!r}"
+            )
+    for stream in manifest.streams:
+        expected = catalog.relative_path(manifest.task_id, manifest.episode_id, stream.camera_id)
+        if stream.relative_path != expected:
+            raise IdentityMismatchError(
+                f"{stream.camera_id}: manifest path {stream.relative_path!r} != "
+                f"catalog path {expected!r}"
+            )
+
+
 def verify_episode(
-    manifest: SourceManifest, data_root: Path, *, compute_hash: bool = True
+    manifest: SourceManifest,
+    data_root: Path,
+    *,
+    compute_hash: bool = True,
+    catalog: Catalog | None = None,
 ) -> VerificationResult:
     """Compare recorded facts with current files; ``backend`` is not compared.
+
+    With a ``catalog`` the manifest's identity is checked first.
 
     File-level facts (size, hash) are checked before decoding so a file that
     changed and no longer decodes is still reported as changed.
     """
 
-    root = _open_root(data_root)
+    if catalog is not None:
+        check_identity(manifest, catalog)
+    root = open_root(data_root)
     differences: list[str] = []
 
     def compare(camera: str, name: str, recorded: object, observed: object) -> None:
@@ -209,6 +263,8 @@ def verify_episode(
         camera = stream.camera_id
         try:
             path = _locate(root, stream.relative_path, camera)
+        except SymlinkRedirectError:
+            raise
         except SourceResolutionError as exc:
             differences.append(f"{exc} (unavailable)")
             continue
@@ -256,6 +312,14 @@ def check_destination(path: Path, data_root: Path, *, force: bool = False) -> Pa
 def write_manifest(
     manifest: SourceManifest, path: Path, *, data_root: Path, force: bool = False
 ) -> None:
+    """Publish a source manifest; see :func:`publish_json`."""
+
+    publish_json(manifest.to_dict(), path, data_root=data_root, force=force)
+
+
+def publish_json(
+    payload_object: object, path: Path, *, data_root: Path, force: bool = False
+) -> None:
     """Publish deterministic JSON atomically, never inside the data root.
 
     The bytes go to a temporary file beside the destination and are then linked
@@ -265,7 +329,7 @@ def write_manifest(
 
     target = check_destination(path, data_root, force=force)
     target.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n"
+    payload = json.dumps(payload_object, indent=2, sort_keys=True, allow_nan=False) + "\n"
     fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:

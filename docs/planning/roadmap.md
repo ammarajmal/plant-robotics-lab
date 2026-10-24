@@ -4,13 +4,14 @@
 - [ ] Create separate Git repository and verify package installation
 - [ ] Run scaffold unit tests; record versions
 - [ ] Decide licenses and NORMAN source reuse permissions
-- [ ] Establish data and model asset manifest (data: `episode_00000` only, PRL-004 in review; models: not started)
+- [ ] Establish data and model asset manifest (data: `episode_00000` only, PRL-004 merged; models: not started)
 
 ## M1 — Multi-camera input
 - [x] Audit existing deterministic decoder
 - [x] Compose reproducible three-view playback (PRL-003)
 - [x] Emit timestamp provenance and frame manifest (PRL-003)
 - [x] Create failure and mismatch tests (PRL-003)
+- [x] Play back real `episode_00000` from a catalog-bound manifest with a full decode audit (PRL-006, awaiting review)
 
 ## M2 — Persistent 2D tracking
 - [ ] Reproduce B0/B1/B2 reference results

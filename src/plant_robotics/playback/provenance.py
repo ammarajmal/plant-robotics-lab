@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import platform
 import subprocess
 from datetime import UTC, datetime
@@ -22,12 +23,18 @@ def config_checksum(config: PlaybackConfig) -> str:
     return hashlib.sha256(config.config_path.read_bytes()).hexdigest()
 
 
-def path_reference(path: Path, *, base: Path) -> str:
-    """Use portable config-relative references, or explicit absolute paths."""
+def path_reference(
+    path: Path, *, base: Path, data_root: Path | None = None, allow_parents: bool = False
+) -> str:
+    """Use portable data-root- or config-relative references, or explicit absolute paths."""
 
+    if data_root is not None and path.is_relative_to(data_root):
+        return f"data-root-relative:{path.relative_to(data_root).as_posix()}"
     try:
         return f"config-relative:{path.relative_to(base).as_posix()}"
     except ValueError:
+        if allow_parents:
+            return f"config-relative:{Path(os.path.relpath(path, base)).as_posix()}"
         return f"absolute:{path}"
 
 
@@ -83,6 +90,17 @@ def make_manifest(
             "path": path_reference(config.config_path, base=config.config_path.parent),
             "sha256": config_checksum(config),
         },
+        **(
+            {
+                "source_manifest": {
+                    "sha256": config.source_manifest_sha256,
+                    "identity": "bound to catalog; paths equal catalog layout; "
+                    "no symlink redirection",
+                }
+            }
+            if config.source_manifest_sha256
+            else {}
+        ),
         "outputs": outputs,
         "execution": {"status": status, "errors": errors},
     }
