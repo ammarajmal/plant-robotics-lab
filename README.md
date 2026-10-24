@@ -13,6 +13,8 @@ uv run ruff check .
 uv run ruff format --check .
 uv run python -m compileall -q src tests
 uv run prl status
+uv run prl doctor     # read-only readiness check
+./scripts/check       # full local quality gate (same as CI)
 ```
 
 Headless nominal three-view evidence can be generated with
