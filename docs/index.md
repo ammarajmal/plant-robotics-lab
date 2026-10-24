@@ -11,6 +11,7 @@
 - [[development/migration_and_provenance]] — source reuse protocol
 - [[development/data_sources]] — read-only data-source manifests (PRL-004)
 - [[development/model_assets]] — storage conventions and checkpoint manifest
+- [[development/independent_review]] — checklist for independent review (PRL-006)
 - [[experiments/index]] — recorded runs and digests
 - [[development/playback]] — playback architecture and test strategy
 - [[development/agent_handoff]] — first agent task
