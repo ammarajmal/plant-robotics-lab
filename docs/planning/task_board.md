@@ -4,7 +4,7 @@
 - DONE PRL-002 — Deterministic video ingestion and frame/timestamp contract (`5fc2879`; report: `docs/reports/prl-002-verification.md`). Whether the decoder derives from NORMAN code is not documented.
 - DONE PRL-003 — Provenance-aware three-view playback (`67f0acc`; 17 tests passed on 2026-10-21; real NORMAN data not yet played back)
 - DONE PRL-004 — Read-only NORMAN data-source resolver and portable manifests (merged `04fdf3b`; `docs/reports/prl-004-verification.md`; one episode only)
-- TODO PRL-005 — Audit NORMAN source provenance and code-reuse permissions (owner declaration recorded 2026-10-25, see `docs/development/migration_and_provenance.md`; third-party code inside NORMAN still needs per-component licence checks; no code reused so far)
+- TODO PRL-005 — Audit NORMAN source provenance and code-reuse permissions (owner declaration recorded 2026-10-25, see `docs/development/migration_and_provenance.md`; third-party code and weights are the owner's downloads and still need upstream licence entries; no code reused so far)
 - REVIEW PRL-006 — Real-data playback and source integrity (branch `feat/prl-006-real-data-playback`; evidence: `docs/reports/prl-006-verification.md`; merged to `main` in PR #1 on 2026-10-24; independent review not confirmed, so not DONE; closes R-004-3)
 - TODO PRL-007 — Reproduce and holdout-test Q=10 Kalman result (renumbered from PRL-006 on 2026-10-21)
 - TODO PRL-008 — Hardlink-free manifest publication fallback for filesystems without `os.link` (deferred from PRL-004 review; see R-004-7)
