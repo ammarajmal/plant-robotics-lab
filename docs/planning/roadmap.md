@@ -11,7 +11,7 @@
 - [x] Compose reproducible three-view playback (PRL-003)
 - [x] Emit timestamp provenance and frame manifest (PRL-003)
 - [x] Create failure and mismatch tests (PRL-003)
-- [x] Play back real `episode_00000` from a catalog-bound manifest with a full decode audit (PRL-006, awaiting review)
+- [x] Play back real `episode_00000` from a catalog-bound manifest with a full decode audit (PRL-006, merged in PR #1; independent review not confirmed)
 
 ## M2 — Persistent 2D tracking
 - [ ] Reproduce B0/B1/B2 reference results
