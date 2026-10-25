@@ -24,7 +24,7 @@ uv run prl playback three-view --config configs/playback/three_view.yaml [--outp
 UV_CACHE_DIR=/tmp/prl-uv-cache uv lock --check    # read-only-cache environments
 ```
 
-Ruff: line length 100, rules E4/E7/E9/F/I/B/UP. Also run `git diff --check` before committing. Conventional commits (`feat(io): ...`), one focused change per branch (`feat/ fix/ test/ docs/ chore/`). Stage explicit files; never `git add .`.
+Ruff: line length 100, rules E4/E7/E9/F/I/B/UP. Also run `git diff --check` before committing. Conventional commits (`feat(io): ...`), one focused change per commit. Docs, config and tiny fixes may be committed straight to `main` after `./scripts/check`; algorithm, evidence, data-handling and safety changes use a branch (`feat/ fix/ test/ docs/ chore/`) and a PR. Ask the user before any push. Stage explicit files; never `git add .`.
 
 ## Architecture
 

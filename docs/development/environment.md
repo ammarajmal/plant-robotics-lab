@@ -98,3 +98,9 @@ DINOv3 is loaded from Meta's official repo or Hugging Face `transformers` using 
 **ROS 2, Gazebo, MoveIt 2 (M5+).** Needs `sudo apt` and is the one step you run yourself, after reading what apt will add: `apt-cache policy ros-lyrical-moveit ros-lyrical-ros-gz`. Source ROS only in the shell that uses it.
 
 **Deferred.** Isaac Sim (heavy, separate Python, 12 GB GPU is marginal). 3D Gaussian splatting needs a CUDA toolkit and a compiler version the toolkit supports (gcc 15 is likely too new); it is not in PRL scope. Open3D and COLMAP when M4 geometry needs them.
+
+## Recorded installs
+
+- `/mnt/space/adev/envs/prl-perception` (2026-10-25): CPython 3.12.13, torch 2.11.0+cu128 (CUDA available on the RTX 4070), transformers 5.20.2, timm 1.0.30, scipy 1.18.1. SAM 2 is an editable install from `/mnt/space/adev/third_party/sam2` (upstream `facebookresearch/sam2`) at commit `2b90b9f5ceec907a1c18123530e92e794ad901a4`. Imports verified; no model has been run.
+- PRL core: optional extra `analysis` (matplotlib, pandas, scikit-learn, scipy); install with `uv sync --extra dev --extra analysis`.
+- Plan for VLM/VLA models: [[development/vla_vlm_roadmap]].
