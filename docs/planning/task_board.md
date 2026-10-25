@@ -6,7 +6,7 @@
 - DONE PRL-004 — Read-only NORMAN data-source resolver and portable manifests (merged `04fdf3b`; `docs/reports/prl-004-verification.md`; one episode only)
 - TODO PRL-005 — Audit NORMAN source provenance and code-reuse permissions (owner declaration recorded 2026-10-25, see `docs/development/migration_and_provenance.md`; third-party code and weights are the owner's downloads and still need upstream licence entries; no code reused so far)
 - REVIEW PRL-006 — Real-data playback and source integrity (branch `feat/prl-006-real-data-playback`; evidence: `docs/reports/prl-006-verification.md`; merged to `main` in PR #1 on 2026-10-24; independent review not confirmed, so not DONE; closes R-004-3)
-- TODO PRL-007 — Reproduce and holdout-test Q=10 Kalman result (renumbered from PRL-006 on 2026-10-21)
+- DOING PRL-007 — Reproduce and holdout-test Q=10 Kalman result (branch `feat/prl-007-blue-marker-baselines`; B0/B1 port reproduces NORMAN left_arm numbers; holdout BLOCKED on ground truth and seeds for `middle` and `right_arm`) (renumbered from PRL-006 on 2026-10-21)
 - TODO PRL-008 — Hardlink-free manifest publication fallback for filesystems without `os.link` (deferred from PRL-004 review; see R-004-7)
 - TODO PRL-009 — Off-disk backup of the data and model roots; record upstream origin and licence of the SAM 2.1 and DINOv3 checkpoints (local SHA-256s done in `model_manifests/`)
 - TODO PRL-010 — Decide whether to add a type checker and pre-commit hooks; decide GitHub plan or visibility for branch protection
